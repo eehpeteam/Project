@@ -1,10 +1,44 @@
 """Configuration management for the application"""
 
 import os
-from dotenv import load_dotenv
+import sys
+from pathlib import Path
 
-# Load environment variables from .env file
-load_dotenv()
+# Optional dependency: python-dotenv with robust .env discovery
+def _load_env_robust():
+    try:
+        from dotenv import load_dotenv  # type: ignore
+    except Exception:
+        # dotenv not available; rely on existing environment variables
+        return False
+
+    # Candidate locations for .env
+    candidates = []
+    try:
+        if getattr(sys, 'frozen', False) and hasattr(sys, 'executable'):
+            # Executable directory (PyInstaller)
+            candidates.append(Path(sys.executable).parent / '.env')
+    except Exception:
+        pass
+
+    # Current working directory
+    candidates.append(Path.cwd() / '.env')
+    # Project root relative to this file (src/ -> project root)
+    try:
+        candidates.append(Path(__file__).resolve().parent.parent / '.env')
+    except Exception:
+        pass
+
+    for env_path in candidates:
+        if env_path.exists():
+            load_dotenv(dotenv_path=str(env_path))
+            return True
+
+    # Fallback to default behavior (searching up the tree)
+    load_dotenv()
+    return True
+
+_load_env_robust()
 
 
 class Config:
@@ -35,20 +69,13 @@ class Config:
     
     @classmethod
     def validate(cls):
-        """Validate that all required configuration is present"""
-        required_fields = [
-            'AZURE_SPEECH_KEY',
-            'AZURE_SPEECH_REGION',
-            'EMAIL_SENDER',
-            'EMAIL_PASSWORD'
-        ]
-        
-        # Basic required fields
-        missing = [field for field in required_fields if not getattr(cls, field)]
-        if missing:
-            raise ValueError(f"Missing required configuration: {', '.join(missing)}")
+        """Validate that required configuration is present.
 
-        # Provider-specific validation
+        Rules:
+        - Azure provider requires AZURE_SPEECH_KEY and AZURE_SPEECH_REGION.
+        - OpenAI provider requires OPENAI_API_KEY.
+        - Email credentials are not strictly required at startup; sending will be skipped/fail gracefully if missing.
+        """
         provider = cls.TRANSCRIBER_PROVIDER.lower() if cls.TRANSCRIBER_PROVIDER else 'azure'
         if provider == 'azure':
             if not cls.AZURE_SPEECH_KEY or not cls.AZURE_SPEECH_REGION:
@@ -57,7 +84,8 @@ class Config:
             if not cls.OPENAI_API_KEY:
                 raise ValueError("TRANSCRIBER_PROVIDER=openai requires OPENAI_API_KEY")
         # whisper_local and mock do not require cloud API keys
-        
+
+        # Email credentials are optional at validation time; sending will check later.
         return True
 
 

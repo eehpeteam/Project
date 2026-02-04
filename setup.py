@@ -27,7 +27,8 @@ setup(
     ],
     python_requires=">=3.8",
     install_requires=[
-        "pyaudio==0.2.13",
+        "sounddevice==0.4.6",
+        "numpy==1.26.4",
         "azure-cognitiveservices-speech==1.37.0",
         "python-dotenv==1.0.0",
         "requests==2.31.0",

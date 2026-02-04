@@ -38,6 +38,11 @@ A comprehensive Python application that captures audio from Microsoft Teams meet
    pip install -r requirements.txt
    ```
 
+4. **(Optional) Install PyInstaller for executable builds**:
+  ```bash
+  pip install pyinstaller
+  ```
+
 4. **Configure environment variables**:
    - Copy `.env.example` to `.env`
    - Edit `.env` with your credentials:
@@ -99,6 +104,47 @@ python main.py --title "Board Meeting" \
 ```bash
 python main.py --validate-config
 ```
+
+## GUI & Executable
+
+### GUI Usage (Start/Stop)
+
+- Launch the GUI:
+  ```bash
+  python src/gui.py
+  ```
+- Enter a meeting title, comma-separated participant emails, and optional action items.
+- Click "Start" when your Teams meeting begins. The app captures audio while the window remains open.
+- Click "Stop" when the meeting ends. The app will then transcribe, format a Word document, and email it to participants.
+
+Notes:
+- This app runs side-by-side with Microsoft Teams. Injecting buttons directly into the Teams UI requires a dedicated Teams app; this GUI provides Start/Stop controls externally.
+- Capturing remote participants’ audio may require routing system audio (e.g., using a loopback device or Virtual Audio Cable). The default capture uses the active microphone input.
+
+### Build a Windows Executable
+
+1. Ensure PyInstaller is installed:
+  ```powershell
+  pip install pyinstaller
+  ```
+2. Build a single-file executable for the GUI:
+  ```powershell
+  pyinstaller --noconsole --name TeamsMeetingNotes --add-data "meeting_notes;meeting_notes" -p src src/gui.py
+  ```
+3. The executable will appear under `dist/TeamsMeetingNotes.exe`.
+4. Place your `.env` file next to the executable or ensure environment variables are set system-wide.
+
+### Running the Executable
+
+- Double-click `TeamsMeetingNotes.exe` to open the GUI.
+- Click "Start" to begin capture; "Stop" to finish and send notes.
+- Meeting notes and logs are saved under `meeting_notes/` by default.
+
+## Microsoft Teams Integration Considerations
+
+- **Side-by-side control**: This executable is designed to run alongside Teams and control capture externally.
+- **Deep integration**: Embedding controls inside Teams meetings requires building a Microsoft Teams app (meeting tab/bot). That’s a separate deployment path and can be scoped later.
+- **Audio source**: To include all meeting audio (not just your microphone), configure a loopback/virtual audio device and select it as the input.
 
 ## API Reference
 
