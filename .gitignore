@@ -27,6 +27,7 @@ wheels/
 
 # Virtual environment
 venv/
+.venv/
 
 # IDE
 .vscode/
@@ -37,6 +38,16 @@ venv/
 # Logs
 *.log
 logs/
+
+# Development caches
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+coverage.xml
+htmlcov/
 
 # Audio files
 *.wav
